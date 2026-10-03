@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Pokédex</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>  
+
+    <!--Escolha o Pokémon Inicial-->
+    <section id="escolha-inicial">
+
+        <h1>Bem Vindo, Treinador!</h1>
+        <p>E escolha seu primeiro Pokémon!</p>
+        <div class="iniciais">
+
+            <div class="pokemon-inicial" data-pokemon="bulbasaur">
+                <img src="images/bulbasaur.png" width="150px" alt="Bulbasaur">
+                <span>Bulbasaur</span>
+
+                <button
+                oneclik="escolher-inicial"(bulbasaur)>
+                Escolher
+            </button>
+            </div>
+
+            <div class="pokemon-inicial" data-pokemon="charmander">
+                <img src="images/charmander.png" width="150px" alt="charmander">
+                <span>Charmander</span>
+
+                <button
+                oneclik="escolher-inicial"(charmander)>
+                Escolher
+            </button>
+            </div>
+
+            <div class="pokemon-inicial" data-pokemon="squirtle">
+                <img src="images/squirtle.png" width="150px" alt="Squirtle">
+                <span>Squirtle</span>
+
+                <button
+                oneclik="escolher-inicial"(squirtle)>
+                Escolher
+            </button>
+            </div>
+
+    </section>
+    
+    <main class="pokedex">
+        <!-- Lado Esquerdo - Principal-->
+        <section class="tela-principal">
+            <header>
+                <h1>Pokédex</h1>
+                <p>Bem Vindo, Treinador!</p>
+            </header>
+        </section> 
+        
+        <!-- Resgate diário-->
+         <section class="recompensa">
+         <h2>Recompensa diária!</h2>
+
+         <p>Você possui: <strong id="quantidade-comida">0</strong> Comidas</p>
+        
+         <button id="botao-resgate">
+            RESGATAR
+         </button>
+
+        <P id="proximo-resgate">
+            Disponível Hoje!
+        </P>
+         </section>
+
+        <!-- Sorteio -->
+         <section class="sorteio">
+
+            <h2>Capture seu Pokémon</h2>
+
+            <div class="pokemon-sorteio">
+                <img
+                  id="imagem-pokemon"
+                  src="images/pokeball.png" width="150px" 
+                  alt="Pokémon"
+                >
+
+                <h3 id="nome-pokemon">
+                    ???
+                </h3>
+            </div>
+
+            <p id="timer-sorteio">
+                Sorteio disponível!
+            </p>
+
+            <button id="botao-sorteio">
+                SORTEAR
+            </button>
+         </section>
+
+         <!-- Box Lateral -->
+          <aside class="box">
+
+            <div class="box-lateral">
+                <h2>Minha Box</h2> 
+
+                <div id="lista-pokemon">
+
+                    <!-- Lista de Pokémon capturados -->
+
+                    <div class="pokemon-box">
+                        <img src="images/pokeball.png" width="100" alt="Pokeball">
+                        
+                        <span>Pokeball</span>
+                    </div>
+                </div>
+            </div>
+          </aside>    
+    </main>
+
+    <script src="js/script.js"></script>
+
+</body>
+</html>
