@@ -2,86 +2,88 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokédex</title>
+    <link rel="icon" href="../images/pokeball.png" type="image/png">
 
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>  
+<body>
 
-    <!--Escolha Pokémon Inicial-->
+    <!-- Escolha do Pokémon inicial -->
     <section id="escolha-inicial">
 
-        <h1>Bem Vindo, Treinador!</h1>
-        <p>Escolha seu primeiro Pokémon!</p>
+        <h1>Bem-vindo, Treinador!</h1>
+        <h2>Escolha seu primeiro Pokémon</h2>
+
         <div class="iniciais">
 
             <div class="pokemon-inicial" data-pokemon="bulbasaur">
-                <img src="images/bulbasaur.png" width="150px" alt="Bulbasaur">
+                <img src="images/bulbasaur.png" width="150" alt="Bulbasaur">
                 <span>Bulbasaur</span>
 
-                <button
-                oneclik="escolher-inicial"(bulbasaur)>
-                Escolher
-            </button>
+                <button type="button" onclick="escolherInicial('bulbasaur')">
+                    Escolher
+                </button>
             </div>
 
             <div class="pokemon-inicial" data-pokemon="charmander">
-                <img src="images/charmander.png" width="150px" alt="charmander">
+                <img src="images/charmander.png" width="150" alt="Charmander">
                 <span>Charmander</span>
 
-                <button
-                oneclik="escolher-inicial"(charmander)>
-                Escolher
-            </button>
+                <button type="button" onclick="escolherInicial('charmander')">
+                    Escolher
+                </button>
             </div>
 
             <div class="pokemon-inicial" data-pokemon="squirtle">
-                <img src="images/squirtle.png" width="150px" alt="Squirtle">
+                <img src="images/squirtle.png" width="150" alt="Squirtle">
                 <span>Squirtle</span>
 
-                <button
-                oneclik="escolher-inicial"(squirtle)>
-                Escolher
-            </button>
+                <button type="button" onclick="escolherInicial('squirtle')">
+                    Escolher
+                </button>
             </div>
 
+        </div>
     </section>
-    
+
     <main class="pokedex">
-        <!-- Lado Esquerdo - Principal-->
+
+        <!-- Lado esquerdo - principal -->
         <section class="tela-principal">
             <header>
                 <h1>Pokédex</h1>
-                <p>Bem Vindo, Treinador!</p>
+                <p>Gerencie e evolua seus Pokémon.</p>
             </header>
-        </section> 
-        
-        <!-- Resgate diário-->
-         <section class="recompensa">
-         <h2>Recompensa diária!</h2>
+        </section>
 
-         <p>Você possui: <strong id="quantidade-comida">0</strong> Comidas</p>
-        
-         <button id="botao-resgate">
-            RESGATAR
-         </button>
+        <!-- Resgate diário -->
+        <section class="recompensa">
+            <h2>Recompensa diária</h2>
 
-        <P id="proximo-resgate">
-            Disponível Hoje!
-        </P>
-         </section>
+            <p>Você possui: <strong id="quantidade-comida">0</strong> comidas</p>
+
+            <button type="button" id="botao-resgate">
+                RESGATAR
+            </button>
+
+            <p id="proximo-resgate">
+                Disponível hoje!
+            </p>
+        </section>
 
         <!-- Sorteio -->
-         <section class="sorteio">
+        <section class="sorteio">
 
             <h2>Capture seu Pokémon</h2>
 
             <div class="pokemon-sorteio">
                 <img
-                  id="imagem-pokemon"
-                  src="images/pokeball.png" width="150px" 
-                  alt="Pokémon"
+                    id="imagem-pokemon"
+                    src="images/pokeball.png" width="150"
+                    alt="Pokémon sorteado"
                 >
 
                 <h3 id="nome-pokemon">
@@ -93,29 +95,208 @@
                 Sorteio disponível!
             </p>
 
-            <button id="botao-sorteio">
+            <button type="button" id="botao-sorteio">
                 SORTEAR
             </button>
-         </section>
+        </section>
 
-         <!-- Box Lateral -->
-          <aside class="box">
+        <!-- Cadastro de Pokémon -->
+        <section class="cadastro">
 
-            <div class="box-lateral">
-                <h2>Minha Box</h2> 
+            <h2>Registrar Pokémon capturado</h2>
 
-                <div id="lista-pokemon">
+            <form id="form-pokemon">
 
-                    <!-- Lista de Pokémon capturados -->
+                <div class="campo">
+                    <label for="numero">Número da Pokédex</label>
+                    <input type="number" id="numero" name="numero" min="1" required>
+                </div>
 
-                    <div class="pokemon-box">
-                        <img src="images/pokeball.png" width="100" alt="Pokeball">
-                        
-                        <span>Pokeball</span>
+                <div class="campo">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+
+                <div class="campo">
+                    <label for="tipo">Tipo</label>
+                    <select id="tipo" name="tipo" required>
+                        <option value="">Selecione...</option>
+                        <option value="fogo">Fogo</option>
+                        <option value="agua">Água</option>
+                        <option value="planta">Planta</option>
+                        <option value="eletrico">Elétrico</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="altura">Altura (m)</label>
+                    <input type="number" id="altura" name="altura" step="0.1" min="0">
+                </div>
+
+                <div class="campo">
+                    <label for="peso">Peso (kg)</label>
+                    <input type="number" id="peso" name="peso" step="0.1" min="0">
+                </div>
+
+                <div class="campo">
+                    <label for="habilidades">Habilidades</label>
+                    <input type="text" id="habilidades" name="habilidades">
+                </div>
+
+                <div class="campo">
+                    <label for="nivel">Nível</label>
+                    <input type="number" id="nivel" name="nivel" min="1" max="100" value="1">
+                </div>
+
+                <div class="campo">
+                    <label for="geracao">Geração</label>
+                    <select id="geracao" name="geracao">
+                        <option value="1">1ª</option>
+                        <option value="2">2ª</option>
+                        <option value="3">3ª</option>
+                    </select>
+                </div>
+
+                <button type="submit">Registrar</button>
+                <button type="reset">Limpar</button>
+
+            </form>
+        </section>
+
+        <!-- Aba para puxar/recolher a Box lateral -->
+        <button type="button" id="botao-box" class="aba-box" aria-expanded="false" aria-controls="box">
+            Box
+        </button>
+
+        <!-- Box lateral (puxável) -->
+        <aside class="box" id="box">
+
+            <!-- Time (6 vagas, preenchidas com os Pokémon marcados na Box) -->
+            <div class="time">
+                <h2>Meu Time</h2>
+
+                <div id="slots-time">
+                    <div class="slot-time">
+                        <img src="images/pokeball.png" width="60" alt="Vaga 1 vazia">
+                        <span>Vaga 1</span>
+                    </div>
+
+                    <div class="slot-time">
+                        <img src="images/pokeball.png" width="60" alt="Vaga 2 vazia">
+                        <span>Vaga 2</span>
+                    </div>
+
+                    <div class="slot-time">
+                        <img src="images/pokeball.png" width="60" alt="Vaga 3 vazia">
+                        <span>Vaga 3</span>
+                    </div>
+
+                    <div class="slot-time">
+                        <img src="images/pokeball.png" width="60" alt="Vaga 4 vazia">
+                        <span>Vaga 4</span>
+                    </div>
+
+                    <div class="slot-time">
+                        <img src="images/pokeball.png" width="60" alt="Vaga 5 vazia">
+                        <span>Vaga 5</span>
+                    </div>
+
+                    <div class="slot-time">
+                        <img src="images/pokeball.png" width="60" alt="Vaga 6 vazia">
+                        <span>Vaga 6</span>
                     </div>
                 </div>
             </div>
-          </aside>    
+
+            <div class="box-lateral">
+                <h2>Minha Box</h2>
+
+                <!-- Pesquisa, filtro e ordenação -->
+                <section class="busca">
+
+                    <h3>Buscar Pokémon</h3>
+
+                    <div class="campo">
+                        <label for="pesquisa">Pesquisar por nome</label>
+                        <input type="search" id="pesquisa" name="pesquisa">
+                    </div>
+
+                    <div class="campo">
+                        <label for="filtro-tipo">Filtrar por tipo</label>
+                        <select id="filtro-tipo" name="filtro-tipo">
+                            <option value="">Todos</option>
+                            <option value="fogo">Fogo</option>
+                            <option value="agua">Água</option>
+                            <option value="planta">Planta</option>
+                            <option value="eletrico">Elétrico</option>
+                            <option value="normal">Normal</option>
+                        </select>
+                    </div>
+
+                    <div class="campo">
+                        <label for="ordenacao">Ordenar por</label>
+                        <select id="ordenacao" name="ordenacao">
+                            <option value="numero">Número</option>
+                            <option value="nome">Nome</option>
+                            <option value="nivel">Nível</option>
+                        </select>
+                    </div>
+
+                </section>
+
+                <div id="lista-pokemon">
+
+                    <!-- Pokémon de exemplo (a listagem dinâmica vem nas próximas etapas) -->
+
+                    <div class="pokemon-box">
+                        <img src="images/charmander.png" width="100" alt="Charmander">
+                        <span>#004 Charmander</span>
+                        <span>Fogo</span>
+
+                        <label>
+                            <input type="checkbox" name="time" value="charmander">
+                            No meu time
+                        </label>
+
+                        <a href="pages/pokemon.html">Detalhes</a>
+                        <button type="button">Editar</button>
+                        <button type="button">Excluir</button>
+                    </div>
+
+                    <div class="pokemon-box">
+                        <img src="images/squirtle.png" width="100" alt="Squirtle">
+                        <span>#007 Squirtle</span>
+                        <span>Água</span>
+
+                        <label>
+                            <input type="checkbox" name="time" value="squirtle">
+                            No meu time
+                        </label>
+
+                        <a href="pages/pokemon.html">Detalhes</a>
+                        <button type="button">Editar</button>
+                        <button type="button">Excluir</button>
+                    </div>
+
+                    <div class="pokemon-box">
+                        <img src="images/bulbasaur.png" width="100" alt="Bulbasaur">
+                        <span>#001 Bulbasaur</span>
+                        <span>Planta</span>
+
+                        <label>
+                            <input type="checkbox" name="time" value="bulbasaur">
+                            No meu time
+                        </label>
+
+                        <a href="pages/pokemon.html">Detalhes</a>
+                        <button type="button">Editar</button>
+                        <button type="button">Excluir</button>
+                    </div>
+
+                </div>
+            </div>
+        </aside>
     </main>
 
     <script src="js/script.js"></script>
