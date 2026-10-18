@@ -3,303 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokédex</title>
-    <link rel="icon" href="../images/pokeball.png" type="image/png">
+    <title>Pokédex Minimalista</title>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pokeRed: '#E53935',
+                        pokeRedDark: '#C62828',
+                        pokeTeal: '#80CBC4',
+                        pokeTealDark: '#00897B',
+                        pokeGreen: '#4CAF50',
+                        pokeSlotDark: '#1E293B'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            20% { transform: translateX(-6px) rotate(-6deg); }
+            40% { transform: translateX(6px) rotate(6deg); }
+            60% { transform: translateX(-4px) rotate(-3deg); }
+            80% { transform: translateX(4px) rotate(3deg); }
+        }
+        .shake-anim { animation: shake 0.5s ease-in-out infinite; }
+
+        @keyframes evolve {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            50% { transform: scale(1.3) rotate(10deg); filter: brightness(2) drop-shadow(0 0 20px #FFD700); }
+            100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+        .evolve-anim { animation: evolve 1s ease-in-out; }
+    </style>
 </head>
+<body class="bg-[#ECEFF1] text-[#37474F] min-h-screen flex items-center justify-center p-4">
 
-<body>
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- PAINEL ESQUERDO: Sorteio e Captura -->
+        <section class="lg:col-span-5 bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between shadow-sm">
+            <div>
+                <!-- Cabeçalho -->
+                <div class="bg-pokeRed text-white px-4 py-3 rounded-2xl flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-bold tracking-wider text-lg">POKÉDEX</h1>
+                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 2a8 8 0 0 1 7.93 7H15a3 3 0 0 0-6 0H2.07A8 8 0 0 1 12 4zm0 16a8 8 0 0 1-7.93-7H9a3 3 0 0 0 6 0h5.93A8 8 0 0 1 12 20zm0-9a1 1 0 1 1-1 1a1 1 0 0 1 1-1z"/>
+                        </svg>
+                    </div>
+                    <div class="bg-black/20 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                        <span>🍎</span> <span id="berryCountDisplay">5</span> Bagas
+                    </div>
+                </div>
 
-    <!-- Escolha do Pokémon inicial -->
-    <section id="escolha-inicial">
+                <!-- Display de Sorteio -->
+                <div class="bg-teal-50/40 border border-teal-100 rounded-2xl my-5 p-6 flex flex-col items-center justify-center min-h-[380px] relative">
+                    <span class="absolute top-4 text-xs font-bold uppercase tracking-widest text-slate-400">Capture seu Pokémon</span>
 
-        <h1>Bem-vindo, Treinador!</h1>
-        <h2>Escolha seu primeiro Pokémon</h2>
+                    <!-- Pokébola Animada -->
+                    <div id="pokeballGraphic" class="w-36 h-36 rounded-full border-4 border-slate-700 bg-white relative overflow-hidden flex flex-col justify-between cursor-pointer shadow-md my-4">
+                        <div class="bg-pokeRed w-full h-[46%] border-b-4 border-slate-700"></div>
+                        <div class="absolute inset-0 m-auto w-10 h-10 bg-white border-4 border-slate-700 rounded-full flex items-center justify-center z-10">
+                            <div class="w-3.5 h-3.5 bg-white border-2 border-slate-700 rounded-full"></div>
+                        </div>
+                        <div class="bg-white w-full h-[46%]"></div>
+                    </div>
 
-        <div class="iniciais">
+                    <!-- Card Resultado -->
+                    <div id="pokemonCard" class="hidden flex flex-col items-center my-2">
+                        <div class="w-32 h-32 flex items-center justify-center">
+                            <img id="pokemonImg" src="" alt="Pokémon Sorteado" class="w-full h-full object-contain">
+                        </div>
+                        <span id="pokemonNumber" class="text-xs font-bold text-slate-400 mt-1">#000</span>
+                        <h3 id="pokemonName" class="text-lg font-extrabold capitalize text-slate-800">Nome</h3>
+                        <div id="pokemonTypes" class="flex gap-1.5 mt-1.5"></div>
+                    </div>
+                </div>
+            </div>
 
-            <div class="pokemon-inicial" data-pokemon="bulbasaur">
-                <img src="images/bulbasaur.png" width="150" alt="Bulbasaur">
-                <span>Bulbasaur</span>
-
-                <button type="button" onclick="escolherInicial('bulbasaur')">
-                    Escolher
+            <!-- Botão Sortear -->
+            <div class="flex flex-col items-center">
+                <button id="btnSortear" onclick="sortearPokemon()" class="w-full max-w-xs bg-pokeRed hover:bg-pokeRedDark text-white font-bold py-3.5 px-6 rounded-full shadow-md tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95">
+                    <span id="btnSortearText">SORTEAR</span>
+                    <svg id="loaderIcon" class="w-5 h-5 animate-spin hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
+                <p class="text-xs text-slate-400 mt-3 text-center">Sorteie Pokémon e alimente-os com bagas para fazê-los evoluir!</p>
             </div>
-
-            <div class="pokemon-inicial" data-pokemon="charmander">
-                <img src="images/charmander.png" width="150" alt="Charmander">
-                <span>Charmander</span>
-
-                <button type="button" onclick="escolherInicial('charmander')">
-                    Escolher
-                </button>
-            </div>
-
-            <div class="pokemon-inicial" data-pokemon="squirtle">
-                <img src="images/squirtle.png" width="150" alt="Squirtle">
-                <span>Squirtle</span>
-
-                <button type="button" onclick="escolherInicial('squirtle')">
-                    Escolher
-                </button>
-            </div>
-
-        </div>
-    </section>
-
-    <main class="pokedex">
-
-        <!-- Lado esquerdo - principal -->
-        <section class="tela-principal">
-            <header>
-                <h1>Pokédex</h1>
-                <p>Gerencie e evolua seus Pokémon.</p>
-            </header>
         </section>
 
-        <!-- Resgate diário -->
-        <section class="recompensa">
-            <h2>Recompensa diária</h2>
-
-            <p>Você possui: <strong id="quantidade-comida">0</strong> comidas</p>
-
-            <button type="button" id="botao-resgate">
-                RESGATAR
-            </button>
-
-            <p id="proximo-resgate">
-                Disponível hoje!
-            </p>
-        </section>
-
-        <!-- Sorteio -->
-        <section class="sorteio">
-
-            <h2>Capture seu Pokémon</h2>
-
-            <div class="pokemon-sorteio">
-                <img
-                    id="imagem-pokemon"
-                    src="images/pokeball.png" width="150"
-                    alt="Pokémon sorteado"
-                >
-
-                <h3 id="nome-pokemon">
-                    ???
-                </h3>
-            </div>
-
-            <p id="timer-sorteio">
-                Sorteio disponível!
-            </p>
-
-            <button type="button" id="botao-sorteio">
-                SORTEAR
-            </button>
-        </section>
-
-        <!-- Cadastro de Pokémon -->
-        <section class="cadastro">
-
-            <h2>Registrar Pokémon capturado</h2>
-
-            <form id="form-pokemon">
-
-                <div class="campo">
-                    <label for="numero">Número da Pokédex</label>
-                    <input type="number" id="numero" name="numero" min="1" required>
+        <!-- PAINEL DIREITO: Coleção, Time Ativo e Box -->
+        <section class="lg:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 flex flex-col justify-between shadow-sm">
+            <div>
+                <!-- Topo da Coleção -->
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-pokeRed"></span>
+                        Coleção Pokémon
+                    </h2>
+                    <span id="counter" class="text-xs font-semibold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">0 / 15 Slots</span>
                 </div>
 
-                <div class="campo">
-                    <label for="nome">Nome</label>
-                    <input type="text" id="nome" name="nome" required>
-                </div>
-
-                <div class="campo">
-                    <label for="tipo">Tipo</label>
-                    <select id="tipo" name="tipo" required>
-                        <option value="">Selecione...</option>
-                        <option value="fogo">Fogo</option>
-                        <option value="agua">Água</option>
-                        <option value="planta">Planta</option>
-                        <option value="eletrico">Elétrico</option>
-                        <option value="normal">Normal</option>
-                    </select>
-                </div>
-
-                <div class="campo">
-                    <label for="altura">Altura (m)</label>
-                    <input type="number" id="altura" name="altura" step="0.1" min="0">
-                </div>
-
-                <div class="campo">
-                    <label for="peso">Peso (kg)</label>
-                    <input type="number" id="peso" name="peso" step="0.1" min="0">
-                </div>
-
-                <div class="campo">
-                    <label for="habilidades">Habilidades</label>
-                    <input type="text" id="habilidades" name="habilidades">
-                </div>
-
-                <div class="campo">
-                    <label for="nivel">Nível</label>
-                    <input type="number" id="nivel" name="nivel" min="1" max="100" value="1">
-                </div>
-
-                <div class="campo">
-                    <label for="geracao">Geração</label>
-                    <select id="geracao" name="geracao">
-                        <option value="1">1ª</option>
-                        <option value="2">2ª</option>
-                        <option value="3">3ª</option>
-                    </select>
-                </div>
-
-                <button type="submit">Registrar</button>
-                <button type="reset">Limpar</button>
-
-            </form>
-        </section>
-
-        <!-- Aba para puxar/recolher a Box lateral -->
-        <button type="button" id="botao-box" class="aba-box" aria-expanded="false" aria-controls="box">
-            Box
-        </button>
-
-        <!-- Box lateral (puxável) -->
-        <aside class="box" id="box">
-
-            <!-- Time (6 vagas, preenchidas com os Pokémon marcados na Box) -->
-            <div class="time">
-                <h2>Meu Time</h2>
-
-                <div id="slots-time">
-                    <div class="slot-time">
-                        <img src="images/pokeball.png" width="60" alt="Vaga 1 vazia">
-                        <span>Vaga 1</span>
+                <!-- Painel de Seleção Rápida -->
+                <div id="selectedPanel" class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 bg-white border border-slate-200 rounded-xl p-1 flex items-center justify-center">
+                            <img id="selectedImg" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" alt="Selecionado" class="w-12 h-12 object-contain">
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 id="selectedName" class="text-sm font-bold text-slate-800">Selecione um Pokémon</h4>
+                                <span id="selectedStage" class="text-[10px] font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded hidden">Estágio 1</span>
+                            </div>
+                            <p id="selectedStatus" class="text-xs text-slate-400">Clique em um slot para interagir.</p>
+                        </div>
                     </div>
 
-                    <div class="slot-time">
-                        <img src="images/pokeball.png" width="60" alt="Vaga 2 vazia">
-                        <span>Vaga 2</span>
+                    <div id="actionButtons" class="hidden flex items-center gap-2">
+                        <button onclick="alimentarPokemon()" id="btnFeed" class="bg-pokeGreen hover:bg-green-600 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition-all">
+                            <span id="btnFeedLabel">🍎 Alimentar</span>
+                            <span id="feedCounter" class="bg-black/20 px-1.5 py-0.5 rounded-full text-[10px]">0/3</span>
+                        </button>
+                        <button onclick="moverPokemon()" id="btnMove" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-sm transition-all">
+                            ⇄ Mover
+                        </button>
+                        <button onclick="abrirModalDetalhes()" id="btnDetails" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-sm transition-all">
+                            🔍 Detalhes
+                        </button>
+                        <button onclick="removerSelecionado()" class="bg-slate-200 hover:bg-rose-100 hover:text-rose-600 text-slate-600 font-bold text-xs p-2 rounded-xl transition-all" title="Soltar Pokémon">
+                            ✕
+                        </button>
                     </div>
+                </div>
 
-                    <div class="slot-time">
-                        <img src="images/pokeball.png" width="60" alt="Vaga 3 vazia">
-                        <span>Vaga 3</span>
+                <!-- Time Ativo (5 Slots) -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <span>⚔️ Time Ativo (Destaques)</span>
+                        <span>Máx. 5</span>
                     </div>
+                    <div id="featuredGrid" class="grid grid-cols-5 gap-2.5"></div>
+                </div>
 
-                    <div class="slot-time">
-                        <img src="images/pokeball.png" width="60" alt="Vaga 4 vazia">
-                        <span>Vaga 4</span>
+                <!-- Box de Reserva (10 Slots) -->
+                <div>
+                    <div class="flex justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <span>📦 Box de Reserva (Inventário)</span>
+                        <span>10 Slots</span>
                     </div>
-
-                    <div class="slot-time">
-                        <img src="images/pokeball.png" width="60" alt="Vaga 5 vazia">
-                        <span>Vaga 5</span>
-                    </div>
-
-                    <div class="slot-time">
-                        <img src="images/pokeball.png" width="60" alt="Vaga 6 vazia">
-                        <span>Vaga 6</span>
-                    </div>
+                    <div id="standardGrid" class="grid grid-cols-5 gap-2.5"></div>
                 </div>
             </div>
 
-            <div class="box-lateral">
-                <h2>Minha Box</h2>
-
-                <!-- Pesquisa, filtro e ordenação -->
-                <section class="busca">
-
-                    <h3>Buscar Pokémon</h3>
-
-                    <div class="campo">
-                        <label for="pesquisa">Pesquisar por nome</label>
-                        <input type="search" id="pesquisa" name="pesquisa">
-                    </div>
-
-                    <div class="campo">
-                        <label for="filtro-tipo">Filtrar por tipo</label>
-                        <select id="filtro-tipo" name="filtro-tipo">
-                            <option value="">Todos</option>
-                            <option value="fogo">Fogo</option>
-                            <option value="agua">Água</option>
-                            <option value="planta">Planta</option>
-                            <option value="eletrico">Elétrico</option>
-                            <option value="normal">Normal</option>
-                        </select>
-                    </div>
-
-                    <div class="campo">
-                        <label for="ordenacao">Ordenar por</label>
-                        <select id="ordenacao" name="ordenacao">
-                            <option value="numero">Número</option>
-                            <option value="nome">Nome</option>
-                            <option value="nivel">Nível</option>
-                        </select>
-                    </div>
-
-                </section>
-
-                <div id="lista-pokemon">
-
-                    <!-- Pokémon de exemplo (a listagem dinâmica vem nas próximas etapas) -->
-
-                    <div class="pokemon-box">
-                        <img src="images/charmander.png" width="100" alt="Charmander">
-                        <span>#004 Charmander</span>
-                        <span>Fogo</span>
-
-                        <label>
-                            <input type="checkbox" name="time" value="charmander">
-                            No meu time
-                        </label>
-
-                        <a href="pages/pokemon.html">Detalhes</a>
-                        <button type="button">Editar</button>
-                        <button type="button">Excluir</button>
-                    </div>
-
-                    <div class="pokemon-box">
-                        <img src="images/squirtle.png" width="100" alt="Squirtle">
-                        <span>#007 Squirtle</span>
-                        <span>Água</span>
-
-                        <label>
-                            <input type="checkbox" name="time" value="squirtle">
-                            No meu time
-                        </label>
-
-                        <a href="pages/pokemon.html">Detalhes</a>
-                        <button type="button">Editar</button>
-                        <button type="button">Excluir</button>
-                    </div>
-
-                    <div class="pokemon-box">
-                        <img src="images/bulbasaur.png" width="100" alt="Bulbasaur">
-                        <span>#001 Bulbasaur</span>
-                        <span>Planta</span>
-
-                        <label>
-                            <input type="checkbox" name="time" value="bulbasaur">
-                            No meu time
-                        </label>
-
-                        <a href="pages/pokemon.html">Detalhes</a>
-                        <button type="button">Editar</button>
-                        <button type="button">Excluir</button>
-                    </div>
-
-                </div>
+            <!-- Rodapé Direito -->
+            <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 text-xs text-slate-400">
+                <span>Alimente com 3 bagas para evoluir seu Pokémon!</span>
+                <button onclick="limparColecao()" class="hover:text-pokeRed transition-colors">Resetar Pokédex</button>
             </div>
-        </aside>
+        </section>
+
     </main>
 
-    <script src="js/script.js"></script>
+    <!-- MODAL 1: Escolha de Inicial -->
+    <div id="starterModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-xl">
+            <div class="text-3xl mb-2">🎮</div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Escolha seu Pokémon Inicial!</h3>
+            <p class="text-xs text-slate-500 mb-6">Bem-vindo à Pokédex! Escolha seu primeiro companheiro de jornada:</p>
+            <div class="grid grid-cols-3 gap-3">
+                <div onclick="escolherInicial(1)" class="border-2 border-slate-200 hover:border-indigo-600 rounded-2xl p-3 cursor-pointer flex flex-col items-center transition-all">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" alt="Bulbasaur" class="w-16 h-16 object-contain">
+                    <span class="text-xs font-bold text-slate-700 mt-2">Bulbasaur</span>
+                    <span class="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full mt-1">Planta</span>
+                </div>
+                <div onclick="escolherInicial(4)" class="border-2 border-slate-200 hover:border-indigo-600 rounded-2xl p-3 cursor-pointer flex flex-col items-center transition-all">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png" alt="Charmander" class="w-16 h-16 object-contain">
+                    <span class="text-xs font-bold text-slate-700 mt-2">Charmander</span>
+                    <span class="text-[9px] font-bold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full mt-1">Fogo</span>
+                </div>
+                <div onclick="escolherInicial(7)" class="border-2 border-slate-200 hover:border-indigo-600 rounded-2xl p-3 cursor-pointer flex flex-col items-center transition-all">
+                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png" alt="Squirtle" class="w-16 h-16 object-contain">
+                    <span class="text-xs font-bold text-slate-700 mt-2">Squirtle</span>
+                    <span class="text-[9px] font-bold bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full mt-1">Água</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Bônus Diário -->
+    <div id="welcomeModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-xl">
+            <div class="text-3xl mb-2">🎁</div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Bônus Diário de Entrada!</h3>
+            <p class="text-xs text-slate-500 mb-6">Você ganhou <strong>+5 Bagas</strong> para alimentar e evoluir seus Pokémon hoje!</p>
+            <button onclick="fecharModalBonus()" class="w-full bg-pokeRed hover:bg-pokeRedDark text-white font-bold py-3 rounded-full text-sm">
+                Coletar e Jogar
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Detalhes do Pokémon -->
+    <div id="detailsModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 relative text-left shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onclick="fecharModalDetalhes()" class="absolute top-4 left-4 bg-slate-100 hover:bg-slate-200 w-9 h-9 rounded-full flex items-center justify-center font-bold text-slate-600">←</button>
+            <div class="text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">PokéDex</div>
+            <h2 id="modalTitle" class="text-2xl font-black uppercase text-slate-800 text-center">---</h2>
+            <div id="modalCategory" class="text-center text-xs text-slate-400 mb-6">--- Pokémon</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Coluna Esquerda: Specs -->
+                <div class="space-y-3">
+                    <div class="flex justify-between text-xs border-b border-slate-100 pb-1">
+                        <span class="text-slate-400 font-semibold">ID</span>
+                        <strong id="modalId" class="text-slate-700">#000</strong>
+                    </div>
+                    <div class="flex justify-between text-xs border-b border-slate-100 pb-1">
+                        <span class="text-slate-400 font-semibold">Altura</span>
+                        <span id="modalHeight" class="text-slate-700">0.0 m</span>
+                    </div>
+                    <div class="flex justify-between text-xs border-b border-slate-100 pb-1">
+                        <span class="text-slate-400 font-semibold">Peso</span>
+                        <span id="modalWeight" class="text-slate-700">0.0 kg</span>
+                    </div>
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 block mb-1">Habilidades</span>
+                        <div id="modalAbilities" class="flex flex-wrap gap-1"></div>
+                    </div>
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-400 block mb-1">Tipos</span>
+                        <div id="modalTypes" class="flex flex-wrap gap-1"></div>
+                    </div>
+                </div>
+
+                <!-- Coluna Centro: Imagem -->
+                <div class="flex items-center justify-center">
+                    <div class="w-44 h-44 flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 p-2">
+                        <img id="modalImg" src="" alt="Pokémon" class="w-full h-full object-contain">
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Atributos -->
+                <div class="space-y-2">
+                    <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full inline-block mb-1">Atributos de Combate</span>
+                    
+                    <div>
+                        <div class="flex justify-between text-[11px] font-bold text-slate-500 mb-0.5"><span>HP</span><span id="statHpVal">0</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="statHpBar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-bold text-slate-500 mb-0.5"><span>Ataque</span><span id="statAtkVal">0</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="statAtkBar" class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-bold text-slate-500 mb-0.5"><span>Defesa</span><span id="statDefVal">0</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="statDefBar" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-bold text-slate-500 mb-0.5"><span>Sp. Ataque</span><span id="statSpAtkVal">0</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="statSpAtkBar" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-bold text-slate-500 mb-0.5"><span>Sp. Defesa</span><span id="statSpDefVal">0</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="statSpDefBar" class="bg-teal-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-bold text-slate-500 mb-0.5"><span>Velocidade</span><span id="statSpdVal">0</span></div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div id="statSpdBar" class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cadeia Evolutiva -->
+            <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                <span class="bg-slate-800 text-white font-bold text-[10px] px-3 py-1 rounded uppercase tracking-wider">Cadeia Evolutiva</span>
+                <div id="modalEvoChain" class="mt-3 flex items-center justify-center gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
 
 </body>
 </html>
