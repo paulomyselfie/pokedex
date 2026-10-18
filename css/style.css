@@ -1,0 +1,740 @@
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+
+body {
+background-color: #ECEFF1;
+font-family: 'Inter', sans-serif;
+color: #37474F;
+min-height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 1.5rem;
+user-select: none;
+}
+
+/* Esconde Elementos */
+.esconde {
+display: none !important;
+}
+
+/* STREAMING_CHUNK:Layout do Conteiner Principal... */
+.container-principal {
+width: 100%;
+max-width: 1150px;
+display: grid;
+grid-template-columns: 1fr;
+gap: 1.5rem;
+}
+
+@media (min-width: 992px) {
+.container-principal {
+grid-template-columns: 5fr 7fr;
+}
+}
+
+/* PAINEL ESQUERDO */
+.painel-esquerdo {
+background-color: #FFFFFF;
+border-radius: 1.5rem;
+border: 1px solid #E2E8F0;
+padding: 0.5rem;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+}
+
+.banner-pokedex {
+background-color: #E53935;
+color: #FFFFFF;
+padding: 0.75rem 1.25rem;
+border-radius: 1rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.titulo-pokedex {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.titulo-pokedex h1 {
+font-size: 1.1rem;
+font-weight: 700;
+letter-spacing: 0.05em;
+}
+
+.icone-pokeball-topo {
+width: 1.25rem;
+height: 1.25rem;
+}
+
+.contador-bagas {
+background-color: rgba(0, 0, 0, 0.2);
+padding: 0.25rem 0.75rem;
+border-radius: 9999px;
+font-size: 0.75rem;
+font-weight: 600;
+}
+
+.card-captura {
+background-color: rgba(178, 223, 219, 0.3);
+border: 1px solid rgba(128, 203, 196, 0.4);
+border-radius: 1rem;
+margin: 0.5rem;
+padding: 1.25rem;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: space-between;
+min-height: 360px;
+}
+
+.subtitulo {
+font-size: 0.75rem;
+font-weight: 700;
+letter-spacing: 0.1em;
+text-transform: uppercase;
+color: rgba(55, 71, 79, 0.8);
+}
+
+.area-display {
+position: relative;
+margin: 1rem 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+/* STREAMING_CHUNK:Estilos e Animações da Pokébola... */
+.pokeball-pulse {
+width: 8rem;
+height: 8rem;
+border-radius: 50%;
+border: 4px solid #37474F;
+background-color: #FFFFFF;
+position: relative;
+overflow: hidden;
+cursor: pointer;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+transition: transform 0.3s ease;
+}
+
+.pokeball-pulse:hover {
+transform: scale(1.05) rotate(6deg);
+}
+
+.pokeball-topo {
+background-color: #E53935;
+width: 100%;
+height: 46%;
+border-bottom: 4px solid #37474F;
+}
+
+.pokeball-centro {
+position: absolute;
+inset: 0;
+margin: auto;
+width: 2.25rem;
+height: 2.25rem;
+background-color: #FFFFFF;
+border: 4px solid #37474F;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 10;
+}
+
+.pokeball-miolo {
+width: 0.85rem;
+height: 0.85rem;
+background-color: #FFFFFF;
+border: 2px solid #37474F;
+border-radius: 50%;
+}
+
+.pokeball-base {
+background-color: #FFFFFF;
+width: 100%;
+height: 46%;
+}
+
+/* Card Resultado do Pokémon */
+.card-resultado {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+.wrapper-imagem {
+width: 7rem;
+height: 7rem;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.wrapper-imagem img {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+
+.numero-pokemon {
+font-size: 0.75rem;
+font-weight: 600;
+color: #78909C;
+margin-top: 0.25rem;
+}
+
+.nome-pokemon {
+font-size: 1rem;
+font-weight: 700;
+text-transform: capitalize;
+}
+
+.container-tipos {
+display: flex;
+gap: 0.35rem;
+margin-top: 0.35rem;
+}
+
+/* STREAMING_CHUNK:Estilos dos Botões e Formulários... */
+.btn-principal {
+width: 100%;
+max-width: 280px;
+background-color: #E53935;
+color: #FFFFFF;
+font-weight: 700;
+border: none;
+padding: 0.75rem 1.5rem;
+border-radius: 9999px;
+cursor: pointer;
+font-size: 0.9rem;
+letter-spacing: 0.05em;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+transition: background-color 0.2s;
+}
+
+.btn-principal:hover {
+background-color: #C62828;
+}
+
+.rodape-esquerdo {
+padding: 0.5rem;
+text-align: center;
+font-size: 0.7rem;
+color: #94A3B8;
+}
+
+/* PAINEL DIREITO */
+.painel-direito {
+background-color: #FFFFFF;
+border-radius: 1.5rem;
+border: 1px solid #E2E8F0;
+padding: 1.5rem;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+}
+
+.cabecalho-colecao {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 1rem;
+padding-bottom: 0.5rem;
+border-bottom: 1px solid #F1F5F9;
+}
+
+.titulo-secao {
+font-size: 0.75rem;
+font-weight: 700;
+text-transform: uppercase;
+color: #64748B;
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.ponto-vermelho {
+width: 0.5rem;
+height: 0.5rem;
+border-radius: 50%;
+background-color: #E53935;
+}
+
+.tag-contador {
+font-size: 0.75rem;
+font-weight: 600;
+background-color: #F1F5F9;
+color: #475569;
+padding: 0.25rem 0.6rem;
+border-radius: 9999px;
+}
+
+/* PAINEL SELECIONADO */
+.painel-selecionado {
+margin-bottom: 1rem;
+background-color: #F8FAFC;
+border: 1px solid #E2E8F0;
+border-radius: 1rem;
+padding: 0.85rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 0.75rem;
+}
+
+.info-selecionado {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+}
+
+.box-imagem-selecionado {
+width: 3.5rem;
+height: 3.5rem;
+background-color: #FFFFFF;
+border: 1px solid #E2E8F0;
+border-radius: 0.75rem;
+padding: 0.25rem;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.box-imagem-selecionado img {
+width: 3rem;
+height: 3rem;
+object-fit: contain;
+}
+
+.linha-nome-estagio {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+
+.linha-nome-estagio h4 {
+font-size: 0.9rem;
+font-weight: 700;
+text-transform: capitalize;
+}
+
+.badge-estagio {
+font-size: 0.65rem;
+font-weight: 700;
+background-color: #E2E8F0;
+color: #475569;
+padding: 0.15rem 0.35rem;
+border-radius: 0.25rem;
+}
+
+.info-selecionado p {
+font-size: 0.75rem;
+color: #94A3B8;
+}
+
+/* STREAMING_CHUNK:Ações e Botões Interativos... */
+.botoes-acao {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+flex-wrap: wrap;
+}
+
+.btn-acao {
+border: none;
+color: #FFFFFF;
+font-weight: 700;
+padding: 0.4rem 0.75rem;
+border-radius: 0.75rem;
+font-size: 0.75rem;
+cursor: pointer;
+display: flex;
+align-items: center;
+gap: 0.35rem;
+}
+
+.btn-alimentar { background-color: #4CAF50; }
+.btn-alimentar:hover { background-color: #388E3C; }
+
+.btn-mover { background-color: #4F46E5; }
+.btn-mover:hover { background-color: #4338CA; }
+
+.btn-detalhes { background-color: #334155; }
+.btn-detalhes:hover { background-color: #1E293B; }
+
+.contador-alimentacoes {
+font-size: 0.65rem;
+background-color: rgba(0, 0, 0, 0.2);
+padding: 0.1rem 0.35rem;
+border-radius: 9999px;
+}
+
+.btn-remover {
+background-color: #E2E8F0;
+color: #475569;
+border: none;
+padding: 0.4rem 0.6rem;
+border-radius: 0.75rem;
+cursor: pointer;
+font-weight: 700;
+}
+
+.btn-remover:hover {
+background-color: #FFE4E6;
+color: #E11D48;
+}
+
+/* GRADES E SLOTS */
+.secao-time, .secao-box {
+margin-bottom: 1rem;
+}
+
+.subcabecalho-secao {
+display: flex;
+justify-content: space-between;
+font-size: 0.65rem;
+font-weight: 700;
+color: #64748B;
+text-transform: uppercase;
+margin-bottom: 0.4rem;
+}
+
+.grid-time, .grid-box {
+display: grid;
+grid-template-columns: repeat(5, 1fr);
+gap: 0.5rem;
+}
+
+/* Destaque Slots */
+.slot-card {
+aspect-ratio: 1;
+border-radius: 0.75rem;
+border: 2px solid #E2E8F0;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+overflow: hidden;
+transition: all 0.2s;
+background-color: #F8FAFC;
+}
+
+.slot-card:hover {
+transform: translateY(-2px);
+border-color: #CBD5E1;
+}
+
+.slot-card.selecionado {
+border-color: #E53935;
+background-color: #FEF2F2;
+transform: scale(1.05);
+}
+
+.slot-card img {
+width: 100%;
+height: 100%;
+object-fit: contain;
+padding: 0.25rem;
+}
+
+.slot-id {
+position: absolute;
+top: 0.25rem;
+left: 0.25rem;
+font-size: 0.55rem;
+font-weight: 700;
+color: #94A3B8;
+}
+
+.slot-alimentacoes {
+position: absolute;
+top: 0.25rem;
+right: 0.25rem;
+font-size: 0.55rem;
+font-weight: 800;
+background-color: #4CAF50;
+color: #FFFFFF;
+padding: 0 0.25rem;
+border-radius: 9999px;
+}
+
+.slot-vazio-dot {
+width: 0.35rem;
+height: 0.35rem;
+border-radius: 50%;
+background-color: #CBD5E1;
+}
+
+.rodape-direito {
+margin-top: 1rem;
+padding-top: 0.75rem;
+border-top: 1px solid #F1F5F9;
+display: flex;
+align-items: center;
+justify-content: space-between;
+font-size: 0.75rem;
+color: #94A3B8;
+}
+
+.btn-resetar {
+background: none;
+border: none;
+color: #94A3B8;
+cursor: pointer;
+font-size: 0.75rem;
+}
+
+.btn-resetar:hover {
+color: #E53935;
+}
+
+/* STREAMING_CHUNK:Estilização de Modais e Overlays... */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background-color: rgba(0, 0, 0, 0.6);
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 1rem;
+z-index: 50;
+}
+
+.modal-conteudo {
+background-color: #FFFFFF;
+border-radius: 1.5rem;
+width: 100%;
+max-width: 450px;
+padding: 1.5rem;
+text-align: center;
+}
+
+.modal-starter h3, .modal-bonus h3 {
+font-size: 1.1rem;
+font-weight: 700;
+margin-bottom: 0.25rem;
+}
+
+.modal-starter p, .modal-bonus p {
+font-size: 0.75rem;
+color: #64748B;
+margin-bottom: 1.25rem;
+}
+
+.grid-iniciais {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 0.75rem;
+}
+
+.card-inicial {
+border: 2px solid #E2E8F0;
+border-radius: 1rem;
+padding: 0.75rem;
+cursor: pointer;
+display: flex;
+flex-direction: column;
+align-items: center;
+transition: all 0.2s;
+}
+
+.card-inicial:hover {
+border-color: #4F46E5;
+transform: translateY(-2px);
+}
+
+.card-inicial img {
+width: 4rem;
+height: 4rem;
+object-fit: contain;
+}
+
+.card-inicial span {
+font-size: 0.75rem;
+font-weight: 700;
+margin-top: 0.5rem;
+}
+
+.badge-tipo {
+font-size: 0.6rem;
+font-weight: 700;
+padding: 0.1rem 0.4rem;
+border-radius: 0.25rem;
+margin-top: 0.25rem;
+text-transform: uppercase;
+}
+
+.tipo-planta { background-color: #D1FAE5; color: #047857; }
+.tipo-fogo { background-color: #FFEDD5; color: #C2410C; }
+.tipo-agua { background-color: #E0F2FE; color: #0369A1; }
+
+/* MODAL DETALHES */
+.modal-detalhes {
+max-width: 700px;
+position: relative;
+text-align: left;
+}
+
+.btn-fechar-modal {
+position: absolute;
+top: 1rem;
+left: 1rem;
+background-color: #F1F5F9;
+border: none;
+width: 2rem;
+height: 2rem;
+border-radius: 50%;
+cursor: pointer;
+font-weight: 700;
+}
+
+.subtitulo-modal {
+text-align: right;
+font-size: 0.65rem;
+font-weight: 700;
+color: #94A3B8;
+text-transform: uppercase;
+}
+
+.modal-detalhes h2 {
+text-align: center;
+font-size: 1.5rem;
+font-weight: 800;
+text-transform: uppercase;
+}
+
+.categoria-modal {
+text-align: center;
+font-size: 0.75rem;
+color: #94A3B8;
+margin-bottom: 1rem;
+}
+
+.grid-detalhes-corpo {
+display: grid;
+grid-template-columns: 1fr;
+gap: 1rem;
+}
+
+@media (min-width: 600px) {
+.grid-detalhes-corpo {
+grid-template-columns: 1fr 1fr 1fr;
+}
+}
+
+.item-especificacao {
+display: flex;
+justify-content: space-between;
+font-size: 0.75rem;
+border-bottom: 1px solid #F1F5F9;
+padding-bottom: 0.25rem;
+margin-bottom: 0.5rem;
+}
+
+.bloco-lista span {
+font-size: 0.7rem;
+font-weight: 700;
+color: #94A3B8;
+display: block;
+margin-bottom: 0.25rem;
+}
+
+.box-imagem-modal {
+width: 100%;
+height: 10rem;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.box-imagem-modal img {
+max-width: 100%;
+max-height: 100%;
+object-fit: contain;
+}
+
+.titulo-atributos {
+font-size: 0.65rem;
+font-weight: 700;
+background-color: #E2E8F0;
+padding: 0.2rem 0.5rem;
+border-radius: 9999px;
+display: inline-block;
+margin-bottom: 0.5rem;
+}
+
+.item-atributo {
+margin-bottom: 0.4rem;
+}
+
+.rotulo-atributo {
+display: flex;
+justify-content: space-between;
+font-size: 0.65rem;
+font-weight: 700;
+color: #64748B;
+}
+
+.barra-fundo {
+width: 100%;
+background-color: #F1F5F9;
+height: 0.5rem;
+border-radius: 9999px;
+overflow: hidden;
+}
+
+.barra-progresso {
+height: 100%;
+border-radius: 9999px;
+width: 0%;
+transition: width 0.5s ease;
+}
+
+.barra-hp { background-color: #10B981; }
+.barra-atk { background-color: #F43F5E; }
+.barra-def { background-color: #F59E0B; }
+.barra-spatk { background-color: #6366F1; }
+.barra-spdef { background-color: #14B8A6; }
+.barra-spd { background-color: #0EA5E9; }
+
+.secao-cadeia-evolutiva {
+margin-top: 1.5rem;
+padding-top: 0.75rem;
+border-top: 1px solid #F1F5F9;
+text-align: center;
+}
+
+.titulo-evolucao {
+background-color: #334155;
+color: #FFFFFF;
+font-size: 0.65rem;
+font-weight: 700;
+padding: 0.25rem 0.75rem;
+border-radius: 0.25rem;
+text-transform: uppercase;
+}
+
+.container-cadeia {
+margin-top: 0.75rem;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 0.5rem;
+}
