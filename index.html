@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokédex Minimalista</title>
+    <title>Pokédex</title>
+    <link rel="icon" href="../images/pokeball.png" type="image/png">
 
     <link rel="stylesheet" href="../css/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -69,12 +70,11 @@
                     <span class="absolute top-4 text-xs font-bold uppercase tracking-widest text-slate-400">Capture seu Pokémon</span>
 
                     <!-- Pokébola Animada -->
-                    <div id="pokeballGraphic" class="w-36 h-36 rounded-full border-4 border-slate-700 bg-white relative overflow-hidden flex flex-col justify-between cursor-pointer shadow-md my-4">
-                        <div class="bg-pokeRed w-full h-[46%] border-b-4 border-slate-700"></div>
-                        <div class="absolute inset-0 m-auto w-10 h-10 bg-white border-4 border-slate-700 rounded-full flex items-center justify-center z-10">
-                            <div class="w-3.5 h-3.5 bg-white border-2 border-slate-700 rounded-full"></div>
-                        </div>
-                        <div class="bg-white w-full h-[46%]"></div>
+                    <div>
+                        <img id="pokeballGraphic" 
+                        src="images/pokeball.png" 
+                        alt="Pokébola" 
+                        class="w-48 h-48 mx-auto cursor-pointer transition-transform hover:scale-105 active:scale-95">
                     </div>
 
                     <!-- Card Resultado -->
