@@ -21,7 +21,7 @@ user-select: none;
 display: none !important;
 }
 
-/* STREAMING_CHUNK:Layout do Conteiner Principal... */
+/* Layout do Conteiner Principal */
 .container-principal {
 width: 100%;
 max-width: 1150px;
@@ -111,7 +111,7 @@ flex-direction: column;
 align-items: center;
 }
 
-/* STREAMING_CHUNK:Estilos e Animações da Pokébola... */
+/* Estilos e Animações da Pokébola */
 .pokeball-pulse {
 width: 8rem;
 height: 8rem;
@@ -207,7 +207,7 @@ gap: 0.35rem;
 margin-top: 0.35rem;
 }
 
-/* STREAMING_CHUNK:Estilos dos Botões e Formulários... */
+/* Estilos dos Botões e Formulários */
 .btn-principal {
 width: 100%;
 max-width: 280px;
@@ -348,7 +348,7 @@ font-size: 0.75rem;
 color: #94A3B8;
 }
 
-/* STREAMING_CHUNK:Ações e Botões Interativos... */
+/* Ações e Botões Interativos */
 .botoes-acao {
 display: flex;
 align-items: center;
@@ -505,7 +505,7 @@ font-size: 0.75rem;
 color: #E53935;
 }
 
-/* STREAMING_CHUNK:Estilização de Modais e Overlays... */
+/* Estilização de Modais e Overlays */
 .modal-overlay {
 position: fixed;
 inset: 0;
@@ -737,4 +737,53 @@ display: flex;
 align-items: center;
 justify-content: center;
 gap: 0.5rem;
+}
+
+/* RESPONSIVIDADE (MEDIA QUERIES) */
+
+/* Dispositivos Móveis (até 600px) */
+@media (max-width: 600px) {
+body {
+padding: 0.75rem;
+}
+
+/* Ajusta as grades do time e box para 3 colunas */
+.grid-time, .grid-box {
+grid-template-columns: repeat(3, 1fr);
+gap: 0.4rem;
+}
+
+/* Painel do Pokémon Selecionado */
+.painel-selecionado {
+flex-direction: column;
+align-items: stretch;
+}
+
+.botoes-acao {
+width: 100%;
+justify-content: space-between;
+}
+
+.btn-acao {
+flex: 1;
+justify-content: center;
+}
+
+/* Modais ajustados para telas menores */
+.modal-conteudo {
+max-height: 90vh;
+overflow-y: auto;
+padding: 1.25rem;
+}
+
+.grid-iniciais {
+grid-template-columns: 1fr;
+}
+}
+
+/* Tablets (Entre 601px e 991px) */
+@media (min-width: 601px) and (max-width: 991px) {
+.grid-time, .grid-box {
+grid-template-columns: repeat(5, 1fr);
+}
 }
