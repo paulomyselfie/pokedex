@@ -19,19 +19,6 @@ const POKEMON_LOCAL_DB = {
     40: { name: "Wigglytuff", types: ["normal", "fada"], stage: 2, nextEvoId: null }
 };
 
-function getPokemonLocalSafe(idNum) {
-    if (POKEMON_LOCAL_DB[idNum]) return POKEMON_LOCAL_DB[idNum];
-    if (idNum >= 1 && idNum <= 386) {
-        return {
-            name: `Pokémon #${String(idNum).padStart(3, '0')}`,
-            types: ["normal"],
-            stage: 1,
-            nextEvoId: null
-        };
-    }
-    return null;
-}
-
 // ====== 2. VARIÁVEIS DE ESTADO (PERSISTÊNCIA) ======
 let timeAtivo = new Array(TOTAL_FEATURED).fill(null);
 let pcBoxes = [ { nome: "Box 1", slots: new Array(TOTAL_STANDARD).fill(null) } ];
@@ -48,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     atualizarSelectBoxes();
     renderGrids();
     atualizarHeaderBagas();
+    repararPokemonsQuebrados().catch(e => console.warn("Falha ao reparar Pokémon salvos.", e));
 });
 
 // ====== 3. SISTEMA DE ALERTAS ======
@@ -77,85 +65,127 @@ function traduzirTipo(tipo) {
     return mapa[tipo.toLowerCase()] || tipo;
 }
 
-async function fetchPokemonFromAPIOrDatabase(idNum, isShinyPassed = false) {
-    const isShiny = isShinyPassed; 
-    const localInfo = getPokemonLocalSafe(idNum);
-
-    let finalName = localInfo ? localInfo.name : `Pokémon #${idNum}`;
-    let typesList = localInfo ? localInfo.types : ["normal"];
-    let nextEvo = localInfo ? localInfo.nextEvoId : null; 
-    let calculatedStage = localInfo ? localInfo.stage : 1;
-    let stats = { hp: 50, attack: 50, defense: 50, spAtk: 50, spDef: 50, speed: 50 };
-    let isLegendary = LEGENDARY_IDS.includes(idNum);
-    let height = "1.0", weight = "10.0";
-    let finalImage = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${idNum}.png`;
-
-    try {
+// Busca JSON com timeout próprio por tentativa e retry. Retorna null se tudo falhar.
+async function fetchJSON(url, tentativas = 2, timeoutMs = 8000) {
+    for (let i = 0; i < tentativas; i++) {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
-        
-        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${idNum}`, { signal: controller.signal });
-        if (res.ok) {
-            const data = await res.json();
-            if (finalName.startsWith("Pokémon #")) finalName = formatarNomePokemon(data.name, idNum);
-            if (!POKEMON_LOCAL_DB[idNum]) typesList = data.types.map(t => traduzirTipo(t.type.name));
-            
-            height = data.height ? (data.height / 10).toFixed(1) : "1.0";
-            weight = data.weight ? (data.weight / 10).toFixed(1) : "10.0";
-            stats = { hp: data.stats?.[0]?.base_stat || 50, attack: data.stats?.[1]?.base_stat || 50, defense: data.stats?.[2]?.base_stat || 50, spAtk: data.stats?.[3]?.base_stat || 50, spDef: data.stats?.[4]?.base_stat || 50, speed: data.stats?.[5]?.base_stat || 50 };
-            
-            if (isShiny && data.sprites?.other?.['official-artwork']?.front_shiny) {
-                finalImage = data.sprites.other['official-artwork'].front_shiny;
-            }
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { signal: controller.signal });
+            if (res.ok) return await res.json();
+        } catch (e) {
+            console.warn(`Tentativa ${i + 1} falhou para ${url}`, e);
+        } finally {
+            clearTimeout(timeoutId);
         }
+    }
+    return null;
+}
 
-        const resSpecies = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${idNum}`, { signal: controller.signal });
-        if (resSpecies.ok) {
-            const speciesData = await resSpecies.json();
-            isLegendary = speciesData.is_legendary || speciesData.is_mythical || LEGENDARY_IDS.includes(idNum);
+// Procura o Pokémon na cadeia evolutiva: devolve o estágio dele e TODAS as evoluções possíveis (até a Gen 3).
+function idDaEspecie(node) {
+    const parts = node.species.url.split('/').filter(Boolean);
+    return parseInt(parts[parts.length - 1]);
+}
 
-            if (!POKEMON_LOCAL_DB[idNum] && speciesData.evolution_chain) {
-                const chainRes = await fetch(speciesData.evolution_chain.url);
-                if (chainRes.ok) {
-                    const chainData = await chainRes.json();
-                    
-                    function findEvo(node, targetName, stage) {
-                        if (node.species.name === targetName) {
-                            if (node.evolves_to && node.evolves_to.length > 0) {
-                                let nextUrl = node.evolves_to[0].species.url;
-                                let parts = nextUrl.split('/').filter(Boolean);
-                                let nextId = parseInt(parts[parts.length - 1]);
-                                return { next: (nextId <= 386 ? nextId : null), stage: stage }; 
-                            }
-                            return { next: null, stage: stage };
-                        }
-                        if (node.evolves_to) {
-                            for (let child of node.evolves_to) {
-                                let result = findEvo(child, targetName, stage + 1);
-                                if (result) return result;
-                            }
-                        }
-                        return null;
-                    }
-                    
-                    let evoResult = findEvo(chainData.chain, speciesData.name, 1);
-                    if (evoResult) {
-                        nextEvo = evoResult.next;
-                        calculatedStage = evoResult.stage;
-                    }
-                }
-            }
+function acharEvolucao(node, targetName, stage) {
+    if (node.species.name === targetName) {
+        const opcoes = (node.evolves_to || []).map(idDaEspecie).filter(id => id >= 1 && id <= 386);
+        return { options: opcoes, stage: stage };
+    }
+    for (const child of (node.evolves_to || [])) {
+        const result = acharEvolucao(child, targetName, stage + 1);
+        if (result) return result;
+    }
+    return null;
+}
+
+// Remove o cache de versões antigas do jogo (que não tinham a lista de evoluções).
+function limparCacheAntigo() {
+    try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('pokedex_cache_v27_')) localStorage.removeItem(k);
         }
-        clearTimeout(timeoutId);
-    } catch (e) {
-        console.warn("API demorou ou falhou. Utilizando fallback local.", e);
+    } catch (e) { /* sem localStorage: segue sem cache */ }
+}
+
+// Busca e resume os dados da PokéAPI. Só guarda em cache se veio COMPLETO (com evolução).
+// `rapido`: usado pros Pokémon do dicionário local, que não dependem da API (1 tentativa, timeout curto).
+async function buscarDadosAPI(idNum, rapido = false) {
+    const cacheKey = `pokedex_cache_v28_${idNum}`;
+    try {
+        const emCache = localStorage.getItem(cacheKey);
+        if (emCache) {
+            const c = JSON.parse(emCache);
+            if (c && Array.isArray(c.evoOptions)) return c;
+        }
+    } catch (e) { /* cache ilegível: ignora e busca de novo */ }
+
+    const [tentativas, timeout] = rapido ? [1, 3500] : [2, 8000];
+    const [data, species] = await Promise.all([
+        fetchJSON(`https://pokeapi.co/api/v2/pokemon/${idNum}`, tentativas, timeout),
+        fetchJSON(`https://pokeapi.co/api/v2/pokemon-species/${idNum}`, tentativas, timeout)
+    ]);
+    if (!data || !species) return null;
+
+    const chain = species.evolution_chain ? await fetchJSON(species.evolution_chain.url, tentativas, timeout) : null;
+    const evo = chain ? acharEvolucao(chain.chain, species.name, 1) : null;
+
+    const s = data.stats || [];
+    const info = {
+        name: formatarNomePokemon(data.name, idNum),
+        types: data.types.map(t => traduzirTipo(t.type.name)),
+        height: data.height ? (data.height / 10).toFixed(1) : "1.0",
+        weight: data.weight ? (data.weight / 10).toFixed(1) : "10.0",
+        stats: {
+            hp: s[0]?.base_stat || 50, attack: s[1]?.base_stat || 50, defense: s[2]?.base_stat || 50,
+            spAtk: s[3]?.base_stat || 50, spDef: s[4]?.base_stat || 50, speed: s[5]?.base_stat || 50
+        },
+        shinyImage: data.sprites?.other?.['official-artwork']?.front_shiny || null,
+        isLegendary: !!(species.is_legendary || species.is_mythical),
+        isBase: !species.evolves_from_species,
+        evoOk: !!evo,
+        evoOptions: evo ? evo.options : [],
+        stage: evo ? evo.stage : 1
+    };
+
+    if (info.evoOk) {
+        try { localStorage.setItem(cacheKey, JSON.stringify(info)); } catch (e) { /* sem espaço: tudo bem */ }
+    }
+    return info;
+}
+
+// Devolve o Pokémon completo, ou null se não der pra montar com dados confiáveis.
+// (Nunca devolve "Pokémon #xxx" nem "nível máx." falso: quem chama trata o null.)
+async function fetchPokemonFromAPIOrDatabase(idNum, isShiny = false) {
+    const local = POKEMON_LOCAL_DB[idNum] || null;
+    const info = await buscarDadosAPI(idNum, !!local);
+
+    // Fora do dicionário local, precisamos da API COMPLETA (nome, tipos e evolução).
+    if (!local && (!info || !info.evoOk)) return null;
+
+    const nome = local ? local.name : info.name;
+    const tipos = local ? local.types : info.types;
+    const stage = local ? local.stage : info.stage;
+    const evoOptions = local ? (local.nextEvoId ? [local.nextEvoId] : []) : info.evoOptions;
+
+    let image = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${idNum}.png`;
+    if (isShiny) {
+        image = (info && info.shinyImage) ||
+            `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${idNum}.png`;
     }
 
     return {
-        id: String(idNum).padStart(3, '0'), rawId: idNum, name: finalName,
-        image: finalImage, types: typesList, height: height, weight: weight,
-        stage: calculatedStage, nextEvoId: nextEvo, isShiny: isShiny, isLegendary: isLegendary,
-        alimentacoes: 0, stats: stats
+        id: String(idNum).padStart(3, '0'), rawId: idNum, name: nome,
+        image: image, types: tipos,
+        height: info ? info.height : "1.0", weight: info ? info.weight : "10.0",
+        stage: stage, nextEvoId: evoOptions.length ? evoOptions[0] : null, evoOptions: evoOptions,
+        isShiny: isShiny,
+        formaBase: local ? local.stage === 1 : info.isBase,
+        isLegendary: (info ? info.isLegendary : false) || LEGENDARY_IDS.includes(idNum),
+        alimentacoes: 0,
+        stats: info ? info.stats : { hp: 50, attack: 50, defense: 50, spAtk: 50, spDef: 50, speed: 50 }
     };
 }
 
@@ -250,72 +280,127 @@ async function escolherInicial(numId) {
         renderGrids();
         verificarInicialEBonus();
     } catch (e) {
-        mostrarAlerta("Erro de Conexão", "Falha ao puxar o Pokémon. Tenta clicar novamente!");
+        mostrarAlerta("Erro de Conexão", "Falha ao puxar o Pokémon. Tente clicar novamente!");
     } finally {
         document.body.style.cursor = "default";
     }
 }
 
-// ====== SORTEIO ALEATÓRIO BLINDADO CONTRA CLIQUE DUPLO ======
+// ====== SORTEIO ALEATÓRIO (SÓ FORMA BASE OU LENDÁRIO) ======
+let sorteando = false; // trava o sorteio (a Pokébola e o botão chamam a mesma função)
+
+function acharSlotLivre() {
+    let idx = timeAtivo.findIndex(item => item === null);
+    if (idx !== -1) return { destino: 'time', index: idx };
+    idx = pcBoxes[caixaAtualIndex].slots.findIndex(item => item === null);
+    if (idx !== -1) return { destino: 'box', index: idx };
+    return null;
+}
+
+function mostrarCelebracao(poke) {
+    const shiny = poke.isShiny, lendario = poke.isLegendary;
+    const gradiente = (lendario && !shiny) ? "from-purple-300 to-indigo-500" : "from-amber-200 to-amber-500";
+    document.getElementById('celebrationCard').className = `bg-gradient-to-br ${gradiente} rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl transform scale-105 transition-transform border-4 border-white relative overflow-hidden`;
+    document.getElementById('celebrationIcon').innerText = shiny && lendario ? '🌟' : (shiny ? '✨' : '👑');
+    document.getElementById('celebrationTitle').innerText = shiny && lendario ? 'Shiny Lendário!' : (shiny ? 'Pokémon Shiny!' : 'Pokémon Lendário!');
+    document.getElementById('celebrationDesc').innerText = shiny && lendario
+        ? `Incrível! Você capturou ${poke.name}, lendário E shiny!`
+        : (shiny ? `Você capturou um ${poke.name} shiny, super raro!` : `Você capturou ${poke.name}, um Pokémon lendário!`);
+    const img = document.getElementById('celebrationImg');
+    img.src = poke.image; img.alt = poke.name;
+    document.getElementById('celebrationModal').classList.remove('hidden');
+}
+function fecharCelebracao() { document.getElementById('celebrationModal').classList.add('hidden'); }
+
 async function sortearPokemon() {
-    let slotVagoIndex = timeAtivo.findIndex(item => item === null);
-    let destino = 'time';
+    if (sorteando) return;
+    if (!acharSlotLivre()) return mostrarAlerta("Espaço Insuficiente", `O Time Ativo e a Box '${pcBoxes[caixaAtualIndex].nome}' estão totalmente cheios! Crie uma Box Nova ou solte algum Pokémon.`);
 
-    if (slotVagoIndex === -1) {
-        slotVagoIndex = pcBoxes[caixaAtualIndex].slots.findIndex(item => item === null);
-        destino = 'box';
-    }
-
-    if (slotVagoIndex === -1) return mostrarAlerta("Espaço Insuficiente", `O Time Ativo e a Box '${pcBoxes[caixaAtualIndex].nome}' estão totalmente cheios! Crie uma Box Nova ou solte algum Pokémon.`);
-
+    sorteando = true;
     const btnSortear = document.getElementById("btnSortear");
+    const btnTexto = document.getElementById("btnSortearText");
+    const loader = document.getElementById("loaderIcon");
     const pb = document.getElementById("pokeballGraphic");
     const pCard = document.getElementById("pokemonCard");
 
     if (btnSortear) btnSortear.disabled = true;
+    if (btnTexto) btnTexto.innerText = "SORTEANDO...";
+    if (loader) loader.classList.remove("hidden");
     if (pb) { pb.classList.remove("hidden"); pb.classList.add("shake-anim"); }
     if (pCard) pCard.classList.add("hidden");
 
     try {
-        let randomId = Math.floor(Math.random() * 386) + 1;
         const isShiny = Math.random() < 0.05;
-        
-        const novoPokemon = await fetchPokemonFromAPIOrDatabase(randomId, isShiny);
+        let novoPokemon = null;
 
-        if (pb) { pb.classList.remove("shake-anim"); pb.classList.add("hidden"); }
+        // Só entram formas base (ou lendários, que já são o máximo). Busca 3 candidatos por vez, em paralelo.
+        for (let rodada = 0; rodada < 4 && !novoPokemon; rodada++) {
+            const ids = [];
+            while (ids.length < 3) {
+                const id = Math.floor(Math.random() * 386) + 1;
+                if (!ids.includes(id)) ids.push(id);
+            }
+            const resultados = await Promise.all(ids.map(id => fetchPokemonFromAPIOrDatabase(id, isShiny)));
+            novoPokemon = resultados.find(p => p && (p.formaBase || p.isLegendary)) || null;
+            if (resultados.every(p => !p)) break; // API fora do ar: não adianta insistir
+        }
+
+        if (pb) pb.classList.remove("shake-anim");
+
+        if (!novoPokemon) {
+            return mostrarAlerta("Erro de Conexão", "Não foi possível buscar um Pokémon agora. Tente sortear de novo.");
+        }
+
+        // Procura o slot livre DEPOIS da espera (o jogador pode ter mexido nos slots).
+        const alvo = acharSlotLivre();
+        if (!alvo) {
+            return mostrarAlerta("Espaço Insuficiente", "Os slots encheram enquanto o Pokémon era buscado. Libere espaço e sorteie de novo.");
+        }
+
+        if (pb) pb.classList.add("hidden");
         if (pCard) pCard.classList.remove("hidden");
 
         document.getElementById("pokemonImg").src = novoPokemon.image;
         document.getElementById("pokemonNumber").innerText = `#${novoPokemon.id}`;
-        
+
         let badges = (novoPokemon.isShiny ? '✨ ' : '') + (novoPokemon.isLegendary ? '👑 ' : '');
         document.getElementById("pokemonName").innerText = `${badges}${novoPokemon.name}`;
         document.getElementById("pokemonTypes").innerHTML = novoPokemon.types.map(t => `<span class="text-[9px] font-bold uppercase bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">${t}</span>`).join('');
 
-        if (destino === 'time') { timeAtivo[slotVagoIndex] = novoPokemon; selectedIndex = slotVagoIndex; selectedTipo = 'time'; }
-        else { pcBoxes[caixaAtualIndex].slots[slotVagoIndex] = novoPokemon; selectedIndex = slotVagoIndex; selectedTipo = 'box'; }
+        if (alvo.destino === 'time') timeAtivo[alvo.index] = novoPokemon;
+        else pcBoxes[caixaAtualIndex].slots[alvo.index] = novoPokemon;
+        selectedIndex = alvo.index; selectedTipo = alvo.destino;
 
-        salvarDados(); 
+        salvarDados();
         renderGrids();
+
+        if (novoPokemon.isShiny || novoPokemon.isLegendary) mostrarCelebracao(novoPokemon);
     } finally {
-        // Garante que o botão destrava independentemente de sucesso ou erro na API
+        // Garante que tudo destrava independentemente de sucesso ou erro na API
+        sorteando = false;
         if (btnSortear) btnSortear.disabled = false;
+        if (btnTexto) btnTexto.innerText = "SORTEAR";
+        if (loader) loader.classList.add("hidden");
     }
 }
 
 // ====== PERSISTÊNCIA DUMP (LOCALSTORAGE JSON) ======
 function carregarDadosLocais() {
-    const savedTime = localStorage.getItem('pokedex_v26_time');
-    const savedBoxes = localStorage.getItem('pokedex_v26_boxes');
-    const savedBerries = localStorage.getItem('pokedex_v26_berries');
-    
-    if (savedTime && savedBoxes) {
-        try { 
-            timeAtivo = JSON.parse(savedTime); 
-            pcBoxes = JSON.parse(savedBoxes); 
-        } catch(e) { console.error("JSON corrompido, reiniciando dados.", e); }
-    }
-    if (savedBerries !== null) bagasCount = parseInt(savedBerries, 10);
+    limparCacheAntigo();
+    try {
+        const savedTime = JSON.parse(localStorage.getItem('pokedex_v26_time'));
+        const savedBoxes = JSON.parse(localStorage.getItem('pokedex_v26_boxes'));
+        const pokeOk = p => p === null || (p && typeof p === 'object' && p.id && p.name);
+        const timeOk = Array.isArray(savedTime) && savedTime.length === TOTAL_FEATURED && savedTime.every(pokeOk);
+        const boxesOk = Array.isArray(savedBoxes) && savedBoxes.length > 0 && savedBoxes.every(b =>
+            b && typeof b.nome === 'string' && Array.isArray(b.slots) && b.slots.length === TOTAL_STANDARD && b.slots.every(pokeOk));
+        // Só aceita os dois juntos: nunca mistura dados salvos com dados novos.
+        if (timeOk && boxesOk) { timeAtivo = savedTime; pcBoxes = savedBoxes; }
+        else if (savedTime || savedBoxes) console.warn("Dados salvos inválidos: iniciando coleção vazia.");
+    } catch (e) { console.error("JSON corrompido, reiniciando dados.", e); }
+
+    const berries = parseInt(localStorage.getItem('pokedex_v26_berries'), 10);
+    if (!isNaN(berries)) bagasCount = Math.max(0, berries);
 }
 
 function salvarDados() {
@@ -364,7 +449,7 @@ function renderGrids() {
             vClass = 'border-slate-200/70 bg-slate-50';
         }
 
-        slot.className = `slot-card featured-slot aspect-[4/5] rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center p-1 relative overflow-hidden ${vClass}`;
+        slot.className = `slot-card featured-slot aspect-[4/5] rounded-xl border-2 transition-all cursor-pointer hover:-translate-y-0.5 flex flex-col items-center justify-center p-1 relative overflow-hidden ${vClass}`;
         if (poke) {
             slot.onclick = () => selecionarSlot('time', i);
             let badges = (poke.isShiny ? '✨' : '') + (poke.isLegendary ? '👑' : '');
@@ -394,7 +479,7 @@ function renderGrids() {
             vClass = 'bg-pokeSlotDark border-slate-700';
         }
 
-        slot.className = `slot-card aspect-square rounded-xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center p-1 relative overflow-hidden ${vClass}`;
+        slot.className = `slot-card aspect-square rounded-xl border-2 transition-all cursor-pointer hover:-translate-y-0.5 flex flex-col items-center justify-center p-1 relative overflow-hidden ${vClass}`;
         if (poke) {
             slot.onclick = () => selecionarSlot('box', i);
             let badges = (poke.isShiny ? '✨' : '') + (poke.isLegendary ? '👑' : '');
@@ -472,15 +557,19 @@ function atualizarPainelSelecionado() {
     }
 }
 
+let evoluindo = false; // trava cliques enquanto uma evolução está sendo buscada
+
 async function alimentarPokemon() {
+    if (evoluindo) return;
     const poke = getPokemonSelecionado();
     if (!poke || poke.nextEvoId === null) return;
     if (bagasCount <= 0) return mostrarAlerta("Sem Bagas!", "Você ficou sem bagas! Volte amanhã para receber o seu bônus diário de 5 Bagas grátis.");
 
     bagasCount--; poke.alimentacoes = (poke.alimentacoes || 0) + 1; atualizarHeaderBagas();
+    salvarDados();
 
-    if (poke.alimentacoes >= 3) { poke.alimentacoes = 0; await evoluirPokemon(poke); } 
-    else { setPokemonSelecionado(poke); salvarDados(); renderGrids(); }
+    if (poke.alimentacoes >= 3) { await evoluirPokemon(poke); }
+    else { renderGrids(); }
 }
 
 async function evoluirPokemon(poke) {
@@ -489,15 +578,53 @@ async function evoluirPokemon(poke) {
         return;
     }
 
-    document.getElementById("selectedImg").classList.add("evolve-anim");
-    setTimeout(() => document.getElementById("selectedImg").classList.remove("evolve-anim"), 1200);
+    evoluindo = true;
+    try {
+        const img = document.getElementById("selectedImg");
+        img.classList.add("evolve-anim");
+        setTimeout(() => img.classList.remove("evolve-anim"), 1200);
 
-    const data = await fetchPokemonFromAPIOrDatabase(poke.nextEvoId, poke.isShiny);
-    
-    poke.id = data.id; poke.rawId = data.rawId; poke.name = data.name; poke.image = data.image; poke.types = data.types; 
-    poke.height = data.height; poke.weight = data.weight; poke.stage = data.stage; poke.nextEvoId = data.nextEvoId; poke.stats = data.stats;
+        // Evolução ramificada (Eevee, Poliwhirl...): sorteia uma das evoluções possíveis.
+        const opcoes = (Array.isArray(poke.evoOptions) && poke.evoOptions.length) ? poke.evoOptions : [poke.nextEvoId];
+        const alvoId = opcoes[Math.floor(Math.random() * opcoes.length)];
+        const data = await fetchPokemonFromAPIOrDatabase(alvoId, poke.isShiny);
 
-    setPokemonSelecionado(poke); salvarDados(); renderGrids();
+        if (!data) {
+            // API falhou: devolve a baga e deixa o Pokémon pronto pra tentar de novo.
+            bagasCount++; poke.alimentacoes = 2; atualizarHeaderBagas();
+            salvarDados(); renderGrids();
+            return mostrarAlerta("Erro de Conexão", "Não foi possível evoluir agora. Sua baga foi devolvida, tente alimentar de novo.");
+        }
+
+        // O objeto `poke` já está no slot certo (mesma referência): atualiza ele mesmo,
+        // sem usar o slot selecionado, que pode ter mudado durante a espera.
+        poke.alimentacoes = 0;
+        poke.id = data.id; poke.rawId = data.rawId; poke.name = data.name; poke.image = data.image; poke.types = data.types;
+        poke.height = data.height; poke.weight = data.weight; poke.stage = data.stage; poke.nextEvoId = data.nextEvoId;
+        poke.evoOptions = data.evoOptions; poke.stats = data.stats;
+
+        salvarDados(); renderGrids();
+    } finally {
+        evoluindo = false;
+    }
+}
+
+// Conserta Pokémon que ficaram salvos quebrados por falha da API ("Pokémon #xxx" ou sem a lista de evoluções).
+async function repararPokemonsQuebrados() {
+    const todos = [...timeAtivo, ...pcBoxes.flatMap(b => b.slots)].filter(p => p);
+    const candidatos = todos.filter(p => Number.isInteger(p.rawId) && !POKEMON_LOCAL_DB[p.rawId] &&
+        (String(p.name).startsWith("Pokémon #") || !Array.isArray(p.evoOptions)));
+
+    let mudou = false;
+    for (const p of candidatos) {
+        const data = await fetchPokemonFromAPIOrDatabase(p.rawId, p.isShiny);
+        if (!data) continue; // API fora: tenta de novo na próxima vez que abrir a página
+        p.name = data.name; p.image = data.image; p.types = data.types; p.height = data.height; p.weight = data.weight;
+        p.stage = data.stage; p.nextEvoId = data.nextEvoId; p.evoOptions = data.evoOptions;
+        p.stats = data.stats; p.isLegendary = data.isLegendary;
+        mudou = true;
+    }
+    if (mudou) { salvarDados(); renderGrids(); }
 }
 
 function moverPokemon() {
@@ -517,7 +644,7 @@ function moverPokemon() {
             timeAtivo[alvoIndex] = poke;
             pcBoxes[caixaAtualIndex].slots[selectedIndex] = null;
             selectedTipo = 'time'; selectedIndex = alvoIndex;
-        } else { return mostrarAlerta("Time Cheio", "O seu Time Ativo já tem 5 Pokémon! Não podes carregar mais nenhum contigo."); }
+        } else { return mostrarAlerta("Time Cheio", "Seu Time Ativo já tem 5 Pokémon! Mova um deles para o PC primeiro."); }
     }
     salvarDados(); renderGrids();
 }
@@ -553,7 +680,7 @@ function abrirModalDetalhes() {
     document.getElementById('modalEvoChain').innerHTML = `
         <span class="bg-slate-100 text-slate-700 border font-bold text-xs px-3 py-1 rounded-lg uppercase">${poke.name}</span>
         <span class="text-slate-400 font-bold">➔</span>
-        <span class="bg-slate-200 text-slate-600 font-bold text-xs px-3 py-1 rounded-lg uppercase">${poke.nextEvoId ? `Próxima Evolução` : 'Estágio Final'}</span>
+        <span class="bg-slate-200 text-slate-600 font-bold text-xs px-3 py-1 rounded-lg uppercase">${poke.nextEvoId ? (poke.evoOptions && poke.evoOptions.length > 1 ? `Evolução aleatória (${poke.evoOptions.length} possíveis)` : 'Próxima Evolução') : 'Estágio Final'}</span>
     `;
     document.getElementById('detailsModal').classList.remove('hidden');
 }
